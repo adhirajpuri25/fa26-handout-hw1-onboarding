@@ -5221,6 +5221,15 @@ final;`,
       });
     }
 
+    // This fixture stands in for a course that existed before the column-groups migration.
+    // Migrations run before seeding (locally and in CI), so the migration's own backfill never
+    // sees these columns; run the same backfill now, exactly as it ran on existing gradebooks.
+    const { data: groupsCreated, error: backfillError } = await supabase.rpc("gradebook_column_groups_backfill");
+    if (backfillError) {
+      throw new Error(`Column-group backfill failed: ${backfillError.message}`);
+    }
+    console.log(`   ✓ Backfilled column groups (${groupsCreated} created)`);
+
     const { data: layout } = await supabase
       .from("gradebook_columns")
       .select("slug, sort_order")
